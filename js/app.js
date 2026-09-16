@@ -1,260 +1,8 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Waypoint</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap">
-<style>
-  html{color-scheme:light dark;}
-  *,*::before,*::after{box-sizing:border-box;}
-  body{margin:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
-  img{max-width:100%;}
-  [hidden]{display:none !important;}
-  :root{
-    --bg:#F0F1F5; --surface:#FFFFFF; --surface-2:#F2F3F7; --border:#E5E7EF;
-    --ink:#14161B; --ink-soft:#666B78; --ink-faint:#9DA2AF;
-    --accent:#3B57F5; --accent-ink:#FFFFFF; --accent-soft:#E6EAFF;
-    --amber:#E8973B; --amber-soft:#FCEBD6;
-    --danger:#DD5A63; --danger-soft:#FBE3E4;
-    --chart-a:#F4645C; --chart-b:#8B7CF6;
-    --grad-1-a:#8E7CF3; --grad-1-b:#F2895E; --grad-1-c:#F7A9C4;
-    --grad-2-a:#63E3D3; --grad-2-b:#4E86F7;
-    --shadow-sm:0 1px 2px rgba(20,22,27,0.06);
-    --shadow-md:0 14px 32px -16px rgba(20,22,27,0.28);
-    --radius-sm:9px; --radius-md:16px; --radius-lg:22px;
-    --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#101218; --surface:#181B22; --surface-2:#1F232C; --border:#2C303C;
-      --ink:#F1F2F6; --ink-soft:#A6ABB8; --ink-faint:#6C7180;
-      --accent:#6C82FF; --accent-ink:#0B0E1A; --accent-soft:#232A45;
-      --amber:#F0AD5E; --amber-soft:#3A2D18;
-      --danger:#EB8890; --danger-soft:#3A2226;
-      --chart-a:#FF7A72; --chart-b:#A99BFF;
-      --shadow-sm:0 1px 2px rgba(0,0,0,0.4); --shadow-md:0 16px 34px -16px rgba(0,0,0,0.65);
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#101218; --surface:#181B22; --surface-2:#1F232C; --border:#2C303C;
-    --ink:#F1F2F6; --ink-soft:#A6ABB8; --ink-faint:#6C7180;
-    --accent:#6C82FF; --accent-ink:#0B0E1A; --accent-soft:#232A45;
-    --amber:#F0AD5E; --amber-soft:#3A2D18;
-    --danger:#EB8890; --danger-soft:#3A2226;
-    --chart-a:#FF7A72; --chart-b:#A99BFF;
-    --shadow-sm:0 1px 2px rgba(0,0,0,0.4); --shadow-md:0 16px 34px -16px rgba(0,0,0,0.65);
-  }
-  *{box-sizing:border-box;}
-  body{background:var(--bg);color:var(--ink);font-family:var(--font);}
-  #app{max-width:1180px;margin:0 auto;padding:20px 16px 64px;display:flex;flex-direction:column;gap:22px;}
-  h1,h2,h3,h4{font-family:var(--font);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-0.01em;}
-  p{margin:0;}
-  button{font-family:inherit;cursor:pointer;}
-  input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;}
-  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
-  ::placeholder{color:var(--ink-faint);}
-  .num{font-variant-numeric:tabular-nums;}
+import * as db from "./db.js";
+import { getSession, onAuthStateChange, signInWithGoogle, signOut } from "./auth.js";
 
-  .topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
-  .brand{display:flex;align-items:center;gap:12px;}
-  .brand-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--chart-b));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;}
-  .brand h1{font-size:21px;}
-  .brand .tag{font-size:13px;color:var(--ink-soft);margin-top:1px;}
-  .stats{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-  .pill{display:flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--ink-soft);}
-  .pill strong{font-variant-numeric:tabular-nums;color:var(--ink);font-size:14px;font-weight:700;}
-  .btn{border:none;border-radius:var(--radius-sm);padding:10px 16px;font-size:14px;font-weight:600;}
-  .btn-primary{background:var(--accent);color:var(--accent-ink);}
-  .btn-primary:hover{filter:brightness(1.05);}
-  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--ink);}
-  .btn-ghost:hover{background:var(--surface-2);}
-  .icon-btn{background:transparent;border:none;color:var(--ink-faint);font-size:14px;padding:4px 6px;border-radius:6px;line-height:1;}
-  .icon-btn:hover{background:var(--surface-2);color:var(--ink);}
-  .icon-btn.danger:hover{background:var(--danger-soft);color:var(--danger);}
-
-  .hero{display:flex;flex-direction:column;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px 32px;box-shadow:var(--shadow-sm);}
-  .hero h2{font-size:24px;max-width:32ch;}
-  .hero p{color:var(--ink-soft);max-width:52ch;font-size:15px;line-height:1.55;}
-
-  /* ---- dashboard overview ---- */
-  .overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
-  .stat-tile{border-radius:var(--radius-lg);padding:20px 22px;display:flex;flex-direction:column;justify-content:space-between;gap:34px;min-height:150px;color:#1A1A1A;box-shadow:var(--shadow-sm);}
-  .stat-tile.grad-1{background:linear-gradient(135deg,var(--grad-1-a),var(--grad-1-b) 55%,var(--grad-1-c));}
-  .stat-tile.grad-2{background:linear-gradient(135deg,var(--grad-2-a),var(--grad-2-b));}
-  .stat-tile-top{display:flex;justify-content:space-between;align-items:flex-start;}
-  .stat-tile-label{font-size:14.5px;font-weight:600;line-height:1.3;color:#211B33;}
-  .stat-tile-icon{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,0.55);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-  .stat-tile-value{font-size:34px;font-weight:800;letter-spacing:-0.02em;color:#1A1626;}
-  .stat-tile-sub{font-size:12.5px;color:#3A3450;font-weight:500;margin-top:2px;}
-  .goals-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-sm);}
-  .goals-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
-  .goals-card-label{font-size:14.5px;font-weight:600;}
-  .goals-card-sub{font-size:12.5px;color:var(--ink-faint);margin-top:2px;}
-  .goal-icon-row{display:flex;align-items:center;gap:-6px;}
-  .goal-icon{width:38px;height:38px;border-radius:11px;background:var(--surface-2);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:17px;margin-left:-8px;}
-  .goal-icon:first-child{margin-left:0;}
-  .goal-icon-add{width:38px;height:38px;border-radius:11px;border:1.5px dashed var(--border);background:transparent;color:var(--ink-faint);font-size:16px;display:flex;align-items:center;justify-content:center;margin-left:-8px;}
-
-  .dash-columns{display:grid;grid-template-columns:1.7fr 1fr;gap:16px;align-items:start;}
-  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;box-shadow:var(--shadow-sm);}
-  .chart-card-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:8px;}
-  .chart-card-head h2{font-size:19px;}
-  .chart-card-head .sub{font-size:12.5px;color:var(--ink-faint);margin-top:2px;}
-  .chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-top:10px;}
-  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
-  .legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-  .chart-wrap{position:relative;width:100%;}
-  .chart-bubble{position:absolute;background:var(--ink);color:var(--bg);border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;transform:translate(-50%,-115%);white-space:nowrap;box-shadow:var(--shadow-md);pointer-events:none;}
-  .chart-bubble .sub2{font-weight:500;opacity:0.7;font-size:11px;}
-  .chart-foot{display:flex;justify-content:flex-end;align-items:baseline;gap:8px;margin-top:6px;}
-  .chart-foot .big{font-size:26px;font-weight:800;}
-  .chart-foot .lbl{font-size:12px;color:var(--ink-faint);}
-
-  .side-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:12px;}
-  .side-card h2{font-size:17px;}
-  .side-card .sub{font-size:12px;color:var(--ink-faint);margin-top:-8px;}
-  .side-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
-  .side-row:last-child{border-bottom:none;padding-bottom:0;}
-  .side-row .side-emoji{width:30px;height:30px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-  .side-row .side-text{flex:1;min-width:0;}
-  .side-row .side-title{font-size:13.5px;font-weight:600;}
-  .side-row .side-meta{font-size:11.5px;color:var(--ink-faint);}
-  .empty-side{font-size:12.5px;color:var(--ink-faint);padding:6px 0;}
-
-  .strength-row{display:flex;flex-direction:column;gap:6px;}
-  .strength-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
-  .strength-name{font-weight:600;}
-  .strength-figs{display:flex;align-items:center;gap:8px;color:var(--ink-soft);}
-  .trend-chip{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
-  .trend-chip.up{background:var(--accent-soft);color:var(--accent);}
-  .trend-chip.down{background:var(--amber-soft);color:var(--amber);}
-  .strength-track{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
-  .strength-fill{height:100%;background:var(--accent);border-radius:99px;}
-
-  .week-strip{display:flex;flex-wrap:wrap;gap:10px;}
-
-  .goal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;}
-  .goal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow-sm);}
-  .goal-card > header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-  .goal-title{display:flex;gap:10px;align-items:flex-start;}
-  .goal-title .emoji{font-size:26px;line-height:1;}
-  .goal-title h3{font-size:19px;}
-  .goal-meta{font-size:12px;color:var(--ink-faint);font-variant-numeric:tabular-nums;margin-top:2px;}
-  .goal-actions{display:flex;gap:2px;flex-shrink:0;}
-  .vision-line{font-style:italic;font-size:14.5px;color:var(--ink-soft);line-height:1.5;padding-left:12px;border-left:2px solid var(--chart-b);}
-  .vision-line strong{color:var(--chart-b);font-weight:700;font-style:normal;}
-
-  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);font-weight:600;}
-
-  .metric-row{display:flex;flex-direction:column;gap:6px;}
-  .metric-top{display:flex;justify-content:space-between;align-items:center;}
-  .metric-name{font-size:13.5px;font-weight:500;}
-  .metric-bar-track{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;}
-  .metric-bar-fill{height:100%;background:var(--accent);border-radius:99px;}
-  .metric-bottom{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);}
-  .metric-input{width:78px;padding:4px 7px;font-variant-numeric:tabular-nums;text-align:right;}
-  .metric-target{font-variant-numeric:tabular-nums;}
-
-  .habit-row{display:flex;align-items:center;gap:10px;}
-  .habit-toggle{width:30px;height:30px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink-faint);}
-  .habit-toggle.is-done{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
-  .habit-info{flex:1;min-width:0;}
-  .habit-name{font-size:13.5px;font-weight:600;}
-  .habit-sub{font-size:11.5px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
-
-  .ms-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
-  .ms-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px;}
-  .ms-row label{display:flex;align-items:center;gap:8px;cursor:pointer;}
-  .ms-row input[type=checkbox]{width:16px;height:16px;}
-  .ms-done{text-decoration:line-through;color:var(--ink-faint);}
-
-  .inline-add{display:flex;gap:6px;margin-top:2px;}
-  .inline-add input,.inline-add select{flex:1;padding:6px 9px;font-size:13px;}
-  .inline-add button{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;color:var(--ink-soft);}
-  .inline-metric-add{display:grid;grid-template-columns:1.4fr 0.7fr 0.7fr auto;gap:6px;margin-top:2px;}
-  .inline-metric-add input{font-size:13px;padding:6px 8px;}
-  .inline-contact-add{display:grid;grid-template-columns:1.3fr 1fr auto;gap:6px;margin-top:2px;}
-  .inline-contact-add input,.inline-contact-add select{font-size:13px;padding:6px 8px;}
-
-  .contact-list{display:flex;flex-direction:column;gap:8px;}
-  .contact-row{border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;display:flex;flex-direction:column;gap:8px;}
-  .contact-row-main{display:flex;align-items:center;gap:8px;}
-  .contact-name-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
-  .contact-name{font-size:13.5px;font-weight:600;}
-  .contact-badge{display:inline-flex;align-self:flex-start;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;letter-spacing:0.01em;}
-  .contact-toggles{display:flex;gap:5px;flex-shrink:0;}
-  .contact-toggle{border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:4px 10px;font-size:11.5px;font-weight:600;color:var(--ink-faint);white-space:nowrap;}
-  .contact-toggle.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);}
-  .contact-toggle.on.meeting{background:var(--amber-soft);color:var(--amber);}
-  .contact-expand-btn{background:transparent;border:none;color:var(--ink-faint);font-size:12px;padding:2px 4px;flex-shrink:0;}
-  .contact-detail{display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--border);}
-  .contact-detail select,.contact-detail textarea{width:100%;font-size:13px;}
-  .contact-detail textarea{min-height:52px;resize:vertical;}
-  .contact-detail-label{font-size:11px;color:var(--ink-faint);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
-
-  .pipeline-stats{display:flex;flex-wrap:wrap;gap:16px;margin-top:4px;margin-bottom:2px;}
-  .pipeline-stat{display:flex;flex-direction:column;gap:1px;}
-  .pipeline-stat .n{font-size:20px;font-weight:800;}
-  .pipeline-stat .l{font-size:11.5px;color:var(--ink-faint);}
-
-  .divider{height:1px;background:var(--border);}
-
-  .science{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px;display:flex;flex-direction:column;gap:16px;}
-  .science h2{font-size:19px;}
-  .science .lede{color:var(--ink-soft);font-size:14px;max-width:70ch;line-height:1.55;}
-  .science-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
-  .sci-card{background:var(--surface-2);border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:6px;}
-  .sci-card h4{font-size:14px;}
-  .sci-card p{font-size:12.8px;color:var(--ink-soft);line-height:1.5;}
-  .sci-card .cite{font-size:11px;color:var(--ink-faint);font-variant-numeric:tabular-nums;}
-
-  .foot-note{text-align:center;font-size:12px;color:var(--ink-faint);padding-top:4px;}
-
-  .modal-overlay{position:fixed;inset:0;background:rgba(20,22,17,0.55);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;z-index:50;overflow-y:auto;}
-  .modal{background:var(--surface);border-radius:var(--radius-lg);width:100%;max-width:520px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;max-height:88vh;}
-  .wizard-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
-  .step-dots{display:flex;gap:6px;}
-  .step-dot{width:7px;height:7px;border-radius:50%;background:var(--border);}
-  .step-dot.active{background:var(--accent);}
-  .step-dot.done{background:var(--amber);}
-  .wizard-body{padding:22px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
-  .wizard-body label{font-size:12.5px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px;}
-  .wizard-body input[type=text],.wizard-body input[type=date],.wizard-body input[type=number],.wizard-body textarea,.wizard-body select{width:100%;}
-  .wizard-body textarea{min-height:70px;resize:vertical;}
-  .field-hint{font-size:11.5px;color:var(--ink-faint);margin-top:5px;line-height:1.4;}
-  .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;}
-  .emoji-opt{width:38px;height:38px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--surface);font-size:18px;display:flex;align-items:center;justify-content:center;}
-  .emoji-opt.selected{border-color:var(--accent);background:var(--accent-soft);}
-  .draft-row{display:flex;gap:8px;align-items:center;}
-  .draft-row .grow{flex:1;}
-  .draft-row .w70{width:72px;}
-  .draft-row .w110{width:112px;}
-  .draft-list{display:flex;flex-direction:column;gap:10px;}
-  .wizard-foot{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;border-top:1px solid var(--border);}
-  .step-title{font-size:16px;margin-bottom:2px;}
-  .step-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;}
-
-  @media (max-width:860px){
-    .overview-grid{grid-template-columns:1fr 1fr;}
-    .goals-card{grid-column:1 / -1;}
-    .dash-columns{grid-template-columns:1fr;}
-  }
-  @media (max-width:600px){
-    .topbar{padding:16px;}
-    .goal-grid{grid-template-columns:1fr;}
-    .inline-metric-add{grid-template-columns:1fr 1fr;}
-    .overview-grid{grid-template-columns:1fr;}
-  }
-</style>
-</head>
-<body>
-<div id="app"></div>
-<script type="application/json" id="state-data">{"goals":[],"createdAt":"2026-09-16"}</script>
-<script id="app-logic">
 (function(){
   "use strict";
-  var TITLE = "Waypoint";
   var EMOJI_OPTS = ["🎯","💼","🏃","🎨","📚","🏠","🧘","✨","💡","❤️"];
   var CADENCE_OPTS = ["Daily","Weekdays","3x / week","Weekly"];
   var CATEGORY_OPTS = ["Potential client","Referral","Network","Friend / Family","Colleague","Other"];
@@ -268,49 +16,19 @@
   };
 
   var state = null;
-  var artifactApi = null;
+  var currentUser = null;
   var sampleApi = null;
   var sampleUnavailable = false;
-  var uiState = { wizardOpen:false, wizardEditId:null, wizardSteps:[], wizardIdx:0, wizardDraft:null, wizardError:"", wizardBusy:null, expandedContact:null };
+  var uiState = { wizardOpen:false, wizardEditId:null, wizardSteps:[], wizardIdx:0, wizardDraft:null, wizardError:"", wizardBusy:null, expandedContact:null, syncError:"" };
 
-  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+  function uid(){ return (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : (Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4)); }
+  function reportSyncError(err){ console.error(err); uiState.syncError = "Couldn't save that change — check your connection and try again."; liveRender(); }
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
   function todayISO(){ return new Date().toISOString().slice(0,10); }
   function shiftISO(dateStr, delta){ var d = new Date(dateStr + "T00:00:00"); d.setDate(d.getDate() + delta); return d.toISOString().slice(0,10); }
   function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 
   function defaultState(){ return { goals: [], createdAt: todayISO() }; }
-
-  function normalizeState(s){
-    (s.goals || []).forEach(function(g){
-      if (!Array.isArray(g.contacts)) g.contacts = [];
-    });
-    return s;
-  }
-
-  var LOCAL_KEY = "waypoint-state-v1";
-
-  function loadInitialFromDOM(){
-    try {
-      var saved = window.localStorage && window.localStorage.getItem(LOCAL_KEY);
-      if (saved) {
-        var fromLocal = JSON.parse(saved);
-        if (fromLocal && Array.isArray(fromLocal.goals)) return normalizeState(fromLocal);
-      }
-    } catch (e) {}
-    try {
-      var el = document.getElementById("state-data");
-      if (el && el.textContent && el.textContent.trim()) {
-        var parsed = JSON.parse(el.textContent);
-        if (parsed && Array.isArray(parsed.goals)) return normalizeState(parsed);
-      }
-    } catch (e) {}
-    return defaultState();
-  }
-
-  function saveLocal(){
-    try { window.localStorage && window.localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch (e) {}
-  }
 
   function computeStreak(log){
     log = log || {};
@@ -348,11 +66,13 @@
     if (h.log[t]) delete h.log[t]; else h.log[t] = true;
     h.best = Math.max(h.best || 0, computeStreak(h.log));
     persist();
+    db.updateHabit(habitId, { log: h.log, best: h.best }).catch(reportSyncError);
   }
   function removeHabit(goalId, habitId){
     var g = findGoal(goalId); if (!g) return;
     g.habits = g.habits.filter(function(h){ return h.id !== habitId; });
     persist();
+    db.deleteHabit(habitId).catch(reportSyncError);
   }
   function updateMetric(goalId, metricId, value){
     var g = findGoal(goalId); if (!g) return;
@@ -360,47 +80,58 @@
     var v = parseFloat(value);
     m.current = isNaN(v) ? 0 : v;
     persist();
+    db.updateMetric(metricId, { current: m.current }).catch(reportSyncError);
   }
   function removeMetric(goalId, metricId){
     var g = findGoal(goalId); if (!g) return;
     g.metrics = g.metrics.filter(function(m){ return m.id !== metricId; });
     persist();
+    db.deleteMetric(metricId).catch(reportSyncError);
   }
   function toggleMilestone(goalId, msId){
     var g = findGoal(goalId); if (!g) return;
     var m = g.milestones.find(function(x){ return x.id === msId; }); if (!m) return;
     m.done = !m.done;
     persist();
+    db.updateMilestone(msId, { done: m.done }).catch(reportSyncError);
   }
   function removeMilestone(goalId, msId){
     var g = findGoal(goalId); if (!g) return;
     g.milestones = g.milestones.filter(function(m){ return m.id !== msId; });
     persist();
+    db.deleteMilestone(msId).catch(reportSyncError);
   }
   function deleteGoal(goalId){
     var g = findGoal(goalId); if (!g) return;
     if (!window.confirm('Delete "' + g.name + '" and all its progress? This can\'t be undone.')) return;
     state.goals = state.goals.filter(function(x){ return x.id !== goalId; });
     persist();
+    db.deleteGoal(goalId).catch(reportSyncError);
   }
   function addHabitInline(goalId, name, cadence){
     name = (name || "").trim(); if (!name) return;
     var g = findGoal(goalId); if (!g) return;
-    g.habits.push({ id: uid(), name: name, cadence: cadence || "Daily", log:{}, best:0 });
+    var habit = { id: uid(), name: name, cadence: cadence || "Daily", log:{}, best:0 };
+    g.habits.push(habit);
     persist();
+    db.insertHabit(currentUser.id, goalId, habit).catch(reportSyncError);
   }
   function addMilestoneInline(goalId, name){
     name = (name || "").trim(); if (!name) return;
     var g = findGoal(goalId); if (!g) return;
-    g.milestones.push({ id: uid(), name: name, done:false });
+    var ms = { id: uid(), name: name, done:false };
+    g.milestones.push(ms);
     persist();
+    db.insertMilestone(currentUser.id, goalId, ms).catch(reportSyncError);
   }
   function addMetricInline(goalId, name, target, unit){
     name = (name || "").trim(); if (!name) return;
     var g = findGoal(goalId); if (!g) return;
     var t = parseFloat(target); if (isNaN(t)) t = 0;
-    g.metrics.push({ id: uid(), name: name, unit: (unit||"").trim(), target: t, current: 0 });
+    var metric = { id: uid(), name: name, unit: (unit||"").trim(), target: t, current: 0 };
+    g.metrics.push(metric);
     persist();
+    db.insertMetric(currentUser.id, goalId, metric).catch(reportSyncError);
   }
   function findContact(goalId, contactId){
     var g = findGoal(goalId); if (!g) return null;
@@ -410,31 +141,37 @@
   function addContactInline(goalId, name, category){
     name = (name || "").trim(); if (!name) return;
     var g = findGoal(goalId); if (!g) return;
-    g.contacts.push({ id: uid(), name: name, category: CATEGORY_OPTS.indexOf(category) >= 0 ? category : "Network", notes: "", reachedOutAt: null, meetingAt: null, createdAt: todayISO() });
+    var contact = { id: uid(), name: name, category: CATEGORY_OPTS.indexOf(category) >= 0 ? category : "Network", notes: "", reachedOutAt: null, meetingAt: null, createdAt: todayISO() };
+    g.contacts.push(contact);
     persist();
+    db.insertContact(currentUser.id, goalId, contact).catch(reportSyncError);
   }
   function removeContact(goalId, contactId){
     var g = findGoal(goalId); if (!g) return;
     g.contacts = g.contacts.filter(function(c){ return c.id !== contactId; });
     if (uiState.expandedContact === contactId) uiState.expandedContact = null;
     persist();
+    db.deleteContact(contactId).catch(reportSyncError);
   }
   function toggleContactReached(goalId, contactId){
     var found = findContact(goalId, contactId); if (!found) return;
     found.c.reachedOutAt = found.c.reachedOutAt ? null : todayISO();
     persist();
+    db.updateContact(contactId, { reachedOutAt: found.c.reachedOutAt }).catch(reportSyncError);
   }
   function toggleContactMeeting(goalId, contactId){
     var found = findContact(goalId, contactId); if (!found) return;
     found.c.meetingAt = found.c.meetingAt ? null : todayISO();
     if (found.c.meetingAt && !found.c.reachedOutAt) found.c.reachedOutAt = todayISO();
     persist();
+    db.updateContact(contactId, { reachedOutAt: found.c.reachedOutAt, meetingAt: found.c.meetingAt }).catch(reportSyncError);
   }
   function updateContactField(goalId, contactId, field, value){
     var found = findContact(goalId, contactId); if (!found) return;
     if (field === "category" && CATEGORY_OPTS.indexOf(value) >= 0) found.c.category = value;
     if (field === "notes") found.c.notes = value;
     persist();
+    db.updateContact(contactId, field === "category" ? { category: found.c.category } : { notes: found.c.notes }).catch(reportSyncError);
   }
   function toggleContactExpand(contactId){
     uiState.expandedContact = uiState.expandedContact === contactId ? null : contactId;
@@ -504,6 +241,7 @@
         g.targetDate = draft.targetDate || "";
         g.why = (draft.why || "").trim();
         g.identity = (draft.identity || "").trim();
+        db.updateGoal(g.id, { emoji: g.emoji, name: g.name, targetDate: g.targetDate, why: g.why, identity: g.identity }).catch(reportSyncError);
       }
     } else {
       var metrics = (draft.metrics || []).filter(function(m){ return (m.name||"").trim(); }).map(function(m){
@@ -516,16 +254,26 @@
       var milestones = (draft.milestones || []).filter(function(m){ return (m.name||"").trim(); }).map(function(m){
         return { id: m.id || uid(), name: m.name.trim(), done:false };
       });
-      state.goals.push({
+      var newGoal = {
         id: uid(), emoji: draft.emoji || "🎯", name: name, targetDate: draft.targetDate || "",
         why: (draft.why||"").trim(), identity: (draft.identity||"").trim(),
         metrics: metrics, habits: habits, milestones: milestones, contacts: [], createdAt: todayISO()
-      });
+      };
+      state.goals.push(newGoal);
+      saveNewGoalToDb(newGoal).catch(reportSyncError);
     }
     uiState.wizardOpen = false;
     uiState.wizardDraft = null;
     uiState.wizardEditId = null;
     persist();
+  }
+  async function saveNewGoalToDb(goal){
+    await db.insertGoal(currentUser.id, goal);
+    await Promise.all([].concat(
+      goal.metrics.map(function(m){ return db.insertMetric(currentUser.id, goal.id, m); }),
+      goal.habits.map(function(h){ return db.insertHabit(currentUser.id, goal.id, h); }),
+      goal.milestones.map(function(m){ return db.insertMilestone(currentUser.id, goal.id, m); })
+    ));
   }
   function wizardAddRow(list){
     var draft = uiState.wizardDraft;
@@ -644,6 +392,7 @@
           '<div class="pill">🔥 best streak <strong class="num">' + bestStreak + '</strong></div>' +
           '<div class="pill">Active goals <strong class="num">' + state.goals.length + '</strong></div>' +
           '<button class="btn btn-primary" data-action="open-wizard">+ New goal</button>' +
+          (currentUser ? '<div class="pill" title="' + esc(currentUser.email||"") + '">' + esc((currentUser.email||"").split("@")[0]) + '</div><button class="btn btn-ghost" data-action="sign-out">Sign out</button>' : '') +
         '</div>' +
       '</div>'
     );
@@ -1158,7 +907,8 @@
   }
 
   function renderAppHTML(){
-    var body = renderTopbar();
+    var body = uiState.syncError ? ('<div class="sync-banner">' + esc(uiState.syncError) + ' <button type="button" class="icon-btn" data-action="dismiss-sync-error">✕</button></div>') : '';
+    body += renderTopbar();
     if (state.goals.length === 0) {
       body += renderHero();
     } else {
@@ -1170,7 +920,7 @@
       body += '<div class="goal-grid">' + state.goals.map(renderGoalCard).join('') + '</div>';
     }
     body += renderScience();
-    body += '<div class="foot-note">Saved automatically to this page &mdash; reopen anytime to pick up where you left off.</div>';
+    body += '<div class="foot-note">Synced to your account &mdash; pick up where you left off on any device.</div>';
     body += renderWizard();
     return body;
   }
@@ -1180,35 +930,10 @@
     document.getElementById("app").innerHTML = renderAppHTML();
   }
 
-  var STYLE_HTML = "";
-  var SCRIPT_HTML = "";
-
   function render(){ liveRender(); }
 
-  async function ensureArtifact(){
-    if (artifactApi) return artifactApi;
-    try {
-      if (window.claude && window.claude.use) artifactApi = await window.claude.use("artifact");
-    } catch (e) { artifactApi = null; }
-    return artifactApi;
-  }
-
-  async function persist(){
+  function persist(){
     liveRender();
-    saveLocal();
-    var api = await ensureArtifact();
-    if (!api) return;
-    try {
-      var stateJson = JSON.stringify(state).replace(/</g, "\\u003c");
-      var doc = "<!doctype html><html><head><meta charset=\"utf-8\">" +
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">" +
-        "<title>" + TITLE + "</title>" + STYLE_HTML +
-        "</head><body><div id=\"app\">" + renderAppHTML() + "</div>" +
-        "<script type=\"application/json\" id=\"state-data\">" + stateJson + "<" + "/script>" +
-        SCRIPT_HTML +
-        "</body></html>";
-      await api.publish(doc);
-    } catch (e) { /* best-effort; local view already reflects the change */ }
   }
 
   // ---------- event delegation ----------
@@ -1236,6 +961,8 @@
       case "toggle-contact-meeting": toggleContactMeeting(goal, el.getAttribute("data-contact")); break;
       case "toggle-contact-expand": toggleContactExpand(el.getAttribute("data-contact")); break;
       case "remove-contact": removeContact(goal, el.getAttribute("data-contact")); break;
+      case "sign-out": signOut(); break;
+      case "dismiss-sync-error": uiState.syncError = ""; liveRender(); break;
     }
   });
 
@@ -1289,26 +1016,52 @@
     form.reset();
   });
 
-  // ---------- boot ----------
-  function start(initial){
-    state = (initial && Array.isArray(initial.goals)) ? normalizeState(initial) : loadInitialFromDOM();
-    var styleEl = document.querySelector("style");
-    var scriptEl = document.getElementById("app-logic");
-    STYLE_HTML = styleEl ? styleEl.outerHTML : "";
-    SCRIPT_HTML = scriptEl ? scriptEl.outerHTML : "";
-    ensureArtifact();
-    liveRender();
+  // ---------- boot / auth ----------
+  var authGateEl = document.getElementById("authGate");
+  var appEl = document.getElementById("app");
+  var signInBtn = document.getElementById("googleSignInBtn");
+  var authErrorEl = document.getElementById("authError");
+
+  async function loadStateFromDb(){
+    try {
+      state = defaultState();
+      state.goals = await db.fetchGoals();
+      liveRender();
+    } catch (e) {
+      console.error(e);
+      uiState.syncError = "Couldn't load your goals — check your connection and reload.";
+      state = defaultState();
+      liveRender();
+    }
   }
 
-  if (window.claude && window.claude.hot && window.claude.hot.snapshot) {
-    window.claude.hot.snapshot(function(){ return state; });
+  async function handleSessionChange(session){
+    if (session && session.user) {
+      currentUser = session.user;
+      authGateEl.hidden = true;
+      appEl.hidden = false;
+      await loadStateFromDb();
+    } else {
+      currentUser = null;
+      state = null;
+      authGateEl.hidden = false;
+      appEl.hidden = true;
+    }
   }
-  if (window.claude && window.claude.hot && window.claude.hot.ready) {
-    window.claude.hot.ready(start);
-  } else {
-    start(window.claude && window.claude.hot ? window.claude.hot.data : null);
+
+  async function start(){
+    signInBtn.addEventListener("click", async function(){
+      authErrorEl.hidden = true;
+      var res = await signInWithGoogle();
+      if (res && res.error) {
+        authErrorEl.textContent = res.error.message || "Couldn't start Google sign-in.";
+        authErrorEl.hidden = false;
+      }
+    });
+    onAuthStateChange(handleSessionChange);
+    var session = await getSession();
+    await handleSessionChange(session);
   }
+
+  start();
 })();
-</script>
-</body>
-</html>
