@@ -1,5 +1,5 @@
 import * as db from "./db.js";
-import { getSession, onAuthStateChange, signInWithGoogle, signOut } from "./auth.js";
+import { getSession, onAuthStateChange, signInAnonymously, signInWithGoogle, signOut } from "./auth.js";
 
 (function(){
   "use strict";
@@ -392,7 +392,8 @@ import { getSession, onAuthStateChange, signInWithGoogle, signOut } from "./auth
           '<div class="pill">🔥 best streak <strong class="num">' + bestStreak + '</strong></div>' +
           '<div class="pill">Active goals <strong class="num">' + state.goals.length + '</strong></div>' +
           '<button class="btn btn-primary" data-action="open-wizard">+ New goal</button>' +
-          (currentUser ? '<div class="pill" title="' + esc(currentUser.email||"") + '">' + esc((currentUser.email||"").split("@")[0]) + '</div><button class="btn btn-ghost" data-action="sign-out">Sign out</button>' : '') +
+          (currentUser && currentUser.is_anonymous ? '<div class="pill" title="Sign-in isn\'t set up yet — this data lives in a guest session tied to this browser.">Guest session</div>' : '') +
+          (currentUser && !currentUser.is_anonymous ? '<div class="pill" title="' + esc(currentUser.email||"") + '">' + esc((currentUser.email||"").split("@")[0]) + '</div><button class="btn btn-ghost" data-action="sign-out">Sign out</button>' : '') +
         '</div>' +
       '</div>'
     );
@@ -1060,6 +1061,20 @@ import { getSession, onAuthStateChange, signInWithGoogle, signOut } from "./auth
     });
     onAuthStateChange(handleSessionChange);
     var session = await getSession();
+    if (!session) {
+      // No Google sign-in wired up yet: fall back to an anonymous Supabase
+      // session so the app (and its database) still work. Requires
+      // "Anonymous Sign-ins" to be turned on in the Supabase dashboard
+      // (Authentication -> Sign In / Providers).
+      var res2 = await signInAnonymously();
+      if (res2 && res2.error) {
+        authGateEl.hidden = false;
+        authErrorEl.textContent = "Couldn't start a session automatically (" + res2.error.message + "). Turn on Anonymous Sign-ins in Supabase, or sign in with Google below.";
+        authErrorEl.hidden = false;
+        return;
+      }
+      session = res2.data.session;
+    }
     await handleSessionChange(session);
   }
 

@@ -11,6 +11,10 @@ export function onAuthStateChange(cb) {
   });
 }
 
+export function signInAnonymously() {
+  return supabase.auth.signInAnonymously();
+}
+
 export function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: "google",
